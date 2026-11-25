@@ -1,4 +1,3 @@
-
 // Navegação mobile, filtros, animações de entrada, galeria e botão voltar ao topo.
 const menuToggle = document.querySelector('.menu-toggle');
 const navLinks = document.querySelector('.nav-links');
