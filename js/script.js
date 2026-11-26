@@ -195,3 +195,73 @@ const backTop = document.querySelector('.back-top');
 window.addEventListener('scroll', () => backTop.classList.toggle('is-visible', window.scrollY > 500), { passive: true });
 backTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 document.querySelector('#year').textContent = new Date().getFullYear();
+const landingMusic = document.querySelector('#landing-audio');
+const musicPlayButton = document.querySelector('[data-music-play]');
+const musicMuteButton = document.querySelector('[data-music-mute]');
+const musicStatus = document.querySelector('[data-music-status]');
+let musicVolume = 0.7;
+let musicAudioContext = null;
+let musicGain = null;
+const prepareMusicAudio = async () => {
+  const AudioContextType = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextType) return;
+  if (!musicAudioContext) {
+    const context = new AudioContextType();
+    const gain = context.createGain();
+    gain.gain.value = musicVolume;
+    const source = context.createMediaElementSource(landingMusic);
+    source.connect(gain);
+    gain.connect(context.destination);
+    musicAudioContext = context;
+    musicGain = gain;
+  }
+  if (musicAudioContext.state === 'suspended') await musicAudioContext.resume();
+  landingMusic.volume = 1;
+};
+const updateMusicControls = () => {
+  const playing = !landingMusic.paused;
+  musicPlayButton.innerHTML = playing ? '&#9208;' : '&#9654;';
+  musicPlayButton.setAttribute('aria-label', playing ? 'Pausar m\u00fasica' : 'Tocar m\u00fasica');
+  musicStatus.textContent = landingMusic.muted ? 'M\u00fasica silenciada' : playing ? 'Tocando agora' : 'Toque para ouvir';
+  musicVolumeLabel.textContent = `${Math.round(musicVolume * 100)}%`;
+  musicVolumeDown.disabled = musicVolume <= 0;
+  musicVolumeUp.disabled = musicVolume >= 1;
+  musicMuteButton.innerHTML = landingMusic.muted ? '&#128263;' : '&#128264;';
+  musicMuteButton.setAttribute('aria-pressed', String(landingMusic.muted));
+  musicMuteButton.setAttribute('aria-label', landingMusic.muted ? 'Ativar som' : 'Silenciar m\u00fasica');
+};
+musicPlayButton.addEventListener('click', async () => {
+  if (landingMusic.paused) {
+    try { const audioReady = prepareMusicAudio(); const playback = landingMusic.play(); await audioReady; await playback; }
+    catch { musicPlayer.classList.remove('is-compact'); musicExpandButton.setAttribute('aria-expanded', 'true'); musicExpandButton.setAttribute('aria-label', 'Recolher player'); musicExpandButton.title = 'Recolher player'; musicExpandButton.textContent = '\u2212 Recolher'; musicStatus.textContent = landingMusic.error ? 'Falha ao carregar a trilha' : 'Toque para liberar o \u00e1udio'; return; }
+  } else landingMusic.pause();
+  updateMusicControls();
+});
+musicMuteButton.addEventListener('click', () => {
+  landingMusic.muted = !landingMusic.muted;
+  updateMusicControls();
+});
+landingMusic.addEventListener('play', updateMusicControls);
+landingMusic.addEventListener('pause', updateMusicControls);
+landingMusic.addEventListener('volumechange', updateMusicControls);
+const musicVolumeDown = document.querySelector('[data-music-volume-down]');
+const musicVolumeUp = document.querySelector('[data-music-volume-up]');
+const musicVolumeLabel = document.querySelector('[data-music-volume]');
+landingMusic.volume = musicVolume;
+const changeMusicVolume = amount => {
+  musicVolume = Math.max(0, Math.min(1, Math.round((musicVolume + amount) * 10) / 10));
+  if (musicGain && musicAudioContext) musicGain.gain.setTargetAtTime(musicVolume, musicAudioContext.currentTime, 0.04);
+  else landingMusic.volume = musicVolume;
+  updateMusicControls();
+};
+musicVolumeDown.addEventListener('click', () => changeMusicVolume(-0.1));
+musicVolumeUp.addEventListener('click', () => changeMusicVolume(0.1));
+const musicPlayer = document.querySelector('.music-player');
+const musicExpandButton = document.querySelector('[data-music-expand]');
+musicExpandButton.addEventListener('click', () => {
+  const compact = musicPlayer.classList.toggle('is-compact');
+  musicExpandButton.setAttribute('aria-expanded', String(!compact));
+  musicExpandButton.setAttribute('aria-label', compact ? 'Expandir player' : 'Recolher player');
+  musicExpandButton.title = compact ? 'Expandir player' : 'Recolher player';
+  musicExpandButton.textContent = compact ? '+ Expandir' : '\u2212 Recolher';
+});
