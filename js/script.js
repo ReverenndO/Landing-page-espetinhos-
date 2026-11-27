@@ -31,7 +31,7 @@ const menuItems = [
   { name: 'Misto: carne, frango e linguiça', category: 'especiais', description: 'Três sabores no mesmo misto: carne, frango e linguiça.', image: 'https://www.qdeliciaespeto.com.br/loja/wp-content/uploads/2016/10/misto.jpg', alt: 'Espeto misto de carne, frango e linguiça' },
   { name: 'Medalhão de carne', category: 'especiais', description: 'Medalhão preparado na brasa, listado entre as opções especiais.', image: 'https://comofazerespetinhos.com/wp-content/uploads/2026/02/espetinho-de-medalhao-com-bacon.webp', alt: 'Espetinho de medalhão de carne' },
   { name: 'Medalhão de frango', category: 'especiais', description: 'Medalhão de frango preparado na brasa, uma opção especial da casa.', image: 'https://www.bolonhaclub.com/files/2026/10/medalhao-frango-bacon-brasa.jpg', alt: 'Espetinho de medalhão de frango' }
-];
+].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
 const menuGrid = document.querySelector('.menu-grid');
 document.querySelector('.filter-list').innerHTML = '<button class="filter-chip is-active" data-filter="todos" aria-pressed="true">Espetos da casa</button>';
 document.querySelector('.gallery-section')?.remove();
